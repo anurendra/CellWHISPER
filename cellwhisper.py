@@ -518,7 +518,7 @@ def run_cellwhisper_pair(
         )
     else:
         std_mat_curr = null_std(
-            gj.,
+            gj.graph_dist,
             cell_type_list,
             annot_df.values,
             p1_list,
