@@ -14,7 +14,8 @@ env/
 venv/
 ENV/
 .python-version
-
+#saved object	
+.object
 # Build / packaging
 build/
 dist/
