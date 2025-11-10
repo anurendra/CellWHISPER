@@ -542,4 +542,102 @@ def run_cellwhisper_pair(
         std_mat_curr,
     )
 
+def run_cellwhisper_pair_adata(
+    adata,
+    gene1,
+    gene2,
+    annot="annotation",
+    spatial_key="spatial",
+    percentile=75,
+    mode="non_iid",
+    graph_cache="results/graph_proximal_base_ss.object",
+    store_key=None,
+):
+    """
+    Run CellWHISPER on a single gene pair using an AnnData object.
+
+    Parameters
+    ----------
+    adata : AnnData
+        Must have adata.obsm[spatial_key] and adata.obs[annot].
+    gene1, gene2 : str
+        Gene names present in adata.var_names.
+    annot : str, default "annotation"
+        Cell-type column in adata.obs.
+    spatial_key : str, default "spatial"
+        Key in adata.obsm containing spatial coordinates.
+    percentile : int, default 75
+        Global expression threshold percentile.
+    mode : {"iid", "non_iid"}, default "non_iid"
+        "non_iid" for gap junction / strong null,
+        "iid" for simple binomial null (e.g. LR).
+    graph_cache : str or None
+        Path to neighbor-graph pickle. If None, graph is recomputed
+        every time. If a path is given, it will be created/loaded via
+        create_whisper_graph.
+    store_key : str or None
+        If not None, results will be stored in
+        adata.uns[store_key]. If None, nothing is stored.
+
+    Returns
+    -------
+    result : dict
+        {
+          "gene1": gene1,
+          "gene2": gene2,
+          "cell_types": [...],
+          "num_whisper": (n_ct, n_ct) array,
+          "num_prox": (n_ct, n_ct) array,
+          "z_score": (n_ct, n_ct) array,
+          "mean": (n_ct, n_ct) array,
+          "std": (n_ct, n_ct) array,
+          "percentile": percentile,
+          "mode": mode,
+        }
+    """
+    # Extract basic pieces
+    df_spatial = adata.obsm[spatial_key]
+    annot_df = adata.obs[annot].to_frame()
+
+    # Expression vectors (keep .toarray() for full compatibility)
+    df_cx1 = adata[:, gene1].X.toarray()
+    df_cx2 = adata[:, gene2].X.toarray()
+
+    (
+        num_whisper_ct_pair,
+        num_prox_ct_pair,
+        z_score_ct_pair,
+        mean_mat_curr,
+        std_mat_curr,
+    ) = run_cellwhisper_pair(
+        df_spatial=df_spatial,
+        df_cx1=df_cx1,
+        df_cx2=df_cx2,
+        annot_df=annot_df,
+        percentile=percentile,
+        mode=mode,
+        annot=annot,
+        f_gj_object=graph_cache,
+    )
+
+    cell_type_list = list(np.unique(annot_df.values))
+
+    result = {
+        "gene1": gene1,
+        "gene2": gene2,
+        "cell_types": cell_type_list,
+        "num_whisper": num_whisper_ct_pair,
+        "num_prox": num_prox_ct_pair,
+        "z_score": z_score_ct_pair,
+        "mean": mean_mat_curr,
+        "std": std_mat_curr,
+        "percentile": percentile,
+        "mode": mode,
+    }
+
+    if store_key is not None:
+        adata.uns[store_key] = result
+
+    return result
+
 
