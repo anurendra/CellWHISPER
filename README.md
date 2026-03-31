@@ -1,4 +1,4 @@
 # CellWHISPER
-This repository accompanies the manuscript “CellWHISPER: Inference of Direct Cell–Cell Communication from Spatial Transcriptomics.”
+This repository accompanies the manuscript “CellWHISPER disentangles direct cell–cell communication from structural proximity.”
 A streamlined tutorial and reproducibility scripts will be expanded following peer review.
 
